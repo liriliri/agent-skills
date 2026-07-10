@@ -1,6 +1,6 @@
 ---
 name: tinker
-description: Tinker desktop toolbox CLI for AI agents. Use when the user needs to open a Tinker plugin, list installed plugins, control plugin windows from the command line, call plugin MCP tools, or integrate Tinker with an AI agent via MCP. Triggers include "open a Tinker plugin", "list tinker plugins", "tinker open", "call a plugin tool", "tinker MCP", "automate JSON editor", or any task requiring programmatic control of the Tinker Electron app and its plugins. Prefer tinker CLI over guessing IPC or UI steps.
+description: Tinker desktop toolbox CLI for AI agents. Use when the user needs to open a Tinker plugin, create a new Tinker plugin, list installed plugins, control plugin windows from the command line, call plugin MCP tools, debug a plugin UI, or integrate Tinker with an AI agent via MCP. Triggers include "open a Tinker plugin", "create a Tinker plugin", "list tinker plugins", "tinker open", "call a plugin tool", "tinker MCP", "automate JSON editor", or any task requiring programmatic control of the Tinker Electron app and its plugins. Prefer tinker CLI over guessing IPC or UI steps.
 allowed-tools: Bash(tinker:*)
 hidden: true
 ---
@@ -24,13 +24,17 @@ The CLI serves skill content from `src/skills` in development. Those files use `
 
 ## Specialized skills
 
-Load the MCP skill when the task involves plugin tools or MCP client integration:
+Load the matching skill for the task:
 
 ```bash
-tinker skills path mcp    # then read SKILL.md inside it
+tinker skills path mcp     # tinker tools / call / mcp
+tinker skills path create  # scaffold a new plugin from tinker-whois
+tinker skills path debug   # inspect/interact with plugin UI via agent-browser
 ```
 
-Use it for `tinker tools`, `tinker call`, and `tinker mcp`.
+- **mcp** — `tinker tools`, `tinker call`, and `tinker mcp`
+- **create** — clone the whois template, build, `npm link`, and open in Tinker
+- **debug** — `tinker open` / `restart` / `close` plus `agent-browser` on CDP 9222
 
 Run `tinker skills list` to see everything available.
 
@@ -51,6 +55,7 @@ tinker ps
 ```
 
 For MCP tool calls, load the **mcp** skill first (`tinker skills path mcp`).
+For a new plugin, load the **create** skill (`tinker skills path create`).
 
 ## Troubleshooting
 
