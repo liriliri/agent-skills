@@ -1698,7 +1698,7 @@ LocalStorage wrapper.
 
 ```typescript
 class LocalStore extends Store {
-    constructor(name: string, data?: {});
+    constructor(name: string, data?: Record<string, any>);
 }
 ```
 
@@ -2675,15 +2675,15 @@ Memory storage.
 
 ```typescript
 class Store extends Emitter {
-    constructor(data?: {});
-    set(key: string, val: any): void;
-    set(values: {}): void;
-    get(key: string): any;
-    get(keys: string[]): {};
+    constructor(data?: Record<string, any>);
+    set<T>(key: string, val: T): void;
+    set(values: Record<string, any>): void;
+    get<T = any>(key: string): T;
+    get(keys: string[]): Record<string, any>;
     remove(key: string): void;
     remove(keys: string[]): void;
     clear(): void;
-    each(fn: (...args: any[]) => void): void;
+    each(fn: (val: any, key: string) => void): void;
 }
 ```
 
@@ -2751,7 +2751,7 @@ Iterate over values.
 |fn  |Function invoked per iteration|
 
 ```javascript
-const store = new Store('test');
+const store = new Store();
 store.set('user', { name: 'licia' });
 store.get('user').name; // -> 'licia'
 store.clear();
@@ -3651,7 +3651,7 @@ Basic base64 encoding and decoding.
 
 ```typescript
 const base64: {
-    encode(bytes: number[]): string;
+    encode(bytes: number[] | Uint8Array | ArrayBufferView): string;
     decode(str: string): number[];
 };
 ```
@@ -3834,7 +3834,10 @@ Convert bytes to string.
 <summary>Type Definition</summary>
 
 ```typescript
-function bytesToStr(bytes: number[], encoding?: string): string;
+function bytesToStr(
+    bytes: number[] | Uint8Array | ArrayBufferView,
+    encoding?: 'utf8' | 'hex' | 'base64' | string
+): string;
 ```
 
 </details>
@@ -4162,7 +4165,17 @@ Utility for conditionally joining class names.
 <summary>Type Definition</summary>
 
 ```typescript
-function className(...names: any[]): string;
+function className(
+    ...names: Array<
+        | string
+        | number
+        | boolean
+        | null
+        | undefined
+        | { [key: string]: any }
+        | Array<any>
+    >
+): string;
 ```
 
 </details>
@@ -4486,7 +4499,10 @@ Check if the value is present in the list.
 <summary>Type Definition</summary>
 
 ```typescript
-function contain(arr: any[] | {} | string, val: any): boolean;
+function contain(
+    arr: readonly any[] | {} | string,
+    val: any
+): boolean;
 ```
 
 </details>
@@ -4564,8 +4580,38 @@ Convert binary data type.
 
 ```typescript
 namespace convertBin {
-    function blobToArrBuffer(blob: any): Promise<ArrayBuffer>;
+    type Source =
+        | string
+        | number[]
+        | ArrayBuffer
+        | ArrayBufferView
+        | Uint8Array;
+    function blobToArrBuffer(blob: Blob): Promise<ArrayBuffer>;
 }
+function convertBin(
+    bin: convertBin.Source,
+    type: 'Uint8Array' | 'uint8array'
+): Uint8Array;
+function convertBin(
+    bin: convertBin.Source,
+    type: 'Array' | 'array'
+): number[];
+function convertBin(
+    bin: convertBin.Source,
+    type: 'ArrayBuffer' | 'arraybuffer'
+): ArrayBuffer;
+function convertBin(
+    bin: convertBin.Source,
+    type: 'base64'
+): string;
+function convertBin(
+    bin: convertBin.Source,
+    type: 'Blob' | 'blob'
+): Blob;
+function convertBin(
+    bin: convertBin.Source,
+    type: 'Buffer' | 'buffer'
+): any;
 function convertBin(bin: any, type: string): any;
 ```
 
@@ -5034,7 +5080,7 @@ const dataUrl: {
         dataUrl: string
     ): { data: string; mime: string; charset: string; base64: boolean } | null;
     stringify(
-        data: any,
+        data: string | number[] | Uint8Array | ArrayBuffer | ArrayBufferView,
         mime: string,
         options?: { base64?: boolean; charset?: string }
     ): string;
@@ -5271,6 +5317,18 @@ Fill in undefined properties in object with the first value present in the follo
 <summary>Type Definition</summary>
 
 ```typescript
+function defaults<T, T1>(obj: T, source1: T1): T & T1;
+function defaults<T, T1, T2>(
+    obj: T,
+    source1: T1,
+    source2: T2
+): T & T1 & T2;
+function defaults<T, T1, T2, T3>(
+    obj: T,
+    source1: T1,
+    source2: T2,
+    source3: T3
+): T & T1 & T2 & T3;
 function defaults(obj: any, ...src: any[]): any;
 ```
 
@@ -6466,7 +6524,10 @@ Return the first index where the predicate truth test passes.
 <summary>Type Definition</summary>
 
 ```typescript
-function findIdx(arr: any[], predicate: types.AnyFn): number;
+function findIdx<T>(
+    arr: T[],
+    predicate: (val: T, idx: number, arr: T[]) => boolean
+): number;
 ```
 
 </details>
@@ -6507,7 +6568,7 @@ function findKey(
     obj: any,
     predicate: types.AnyFn,
     ctx?: any
-): string | void;
+): string | undefined;
 ```
 
 </details>
@@ -7152,7 +7213,7 @@ Hex encoding and decoding.
 
 ```typescript
 const hex: {
-    encode(bytes: number[]): string;
+    encode(bytes: number[] | Uint8Array | ArrayBufferView): string;
     decode(str: string): number[];
 };
 ```
@@ -9915,7 +9976,7 @@ MD5 implementation.
 <summary>Type Definition</summary>
 
 ```typescript
-function md5(msg: string | number[]): string;
+function md5(msg: string | number[] | Uint8Array): string;
 ```
 
 </details>
@@ -11158,6 +11219,10 @@ Extract a list of property values.
 <summary>Type Definition</summary>
 
 ```typescript
+function pluck<T, K extends keyof T>(
+    list: types.List<T>,
+    key: K
+): T[K][];
 function pluck(object: any, key: string | string[]): any[];
 ```
 
@@ -11284,10 +11349,14 @@ Convert callback based functions into Promises.
 <summary>Type Definition</summary>
 
 ```typescript
+function promisify<TArgs extends any[], TResult>(
+    fn: (...args: [...TArgs, (err: any, result: TResult) => void]) => any,
+    multiArgs?: false
+): (...args: TArgs) => Promise<TResult>;
 function promisify(
     fn: types.AnyFn,
     multiArgs?: boolean
-): types.AnyFn;
+): (...args: any[]) => Promise<any>;
 ```
 
 </details>
@@ -11342,7 +11411,7 @@ Parse and stringify url query strings.
 
 ```typescript
 const query: {
-    parse(str: string): any;
+    parse(str: string): Record<string, string | string[]>;
     stringify(object: any): string;
 };
 ```
@@ -11763,11 +11832,11 @@ Remove all elements from array that predicate returns truthy for and return an a
 <summary>Type Definition</summary>
 
 ```typescript
-function remove<T, TResult>(
+function remove<T>(
     list: types.List<T>,
     iterator: types.ListIterator<T, boolean>,
     context?: any
-): TResult[];
+): T[];
 ```
 
 </details>
@@ -12372,6 +12441,28 @@ const groups = selector.parse('#test, input.user[name="licia"]');
 selector.stringify(groups);
 ```
 
+## sha1 
+
+SHA1 implementation.
+
+<details>
+<summary>Type Definition</summary>
+
+```typescript
+function sha1(msg: string | number[] | Uint8Array): string;
+```
+
+</details>
+
+|Name  |Desc              |
+|------|------------------|
+|msg   |Message to encrypt|
+|return|SHA1 hash         |
+
+```javascript
+sha1('licia'); // -> 'bf29b6b1e26689ce4fbb320df1ee534216b579d5'
+```
+
 ## shebang 
 
 Get command from a shebang.
@@ -12674,11 +12765,11 @@ Return an array of elements sorted in ascending order by results of running each
 <summary>Type Definition</summary>
 
 ```typescript
-function sortBy(
-    arr: any,
-    iterator?: types.AnyFn,
+function sortBy<T>(
+    arr: T[],
+    iterator?: keyof T | ((item: T, index: number, list: T[]) => any),
     ctx?: any
-): any[];
+): T[];
 ```
 
 </details>
@@ -12889,7 +12980,10 @@ Convert string into bytes.
 <summary>Type Definition</summary>
 
 ```typescript
-function strToBytes(str: string, encoding?: string): number[];
+function strToBytes(
+    str: string,
+    encoding?: 'utf8' | 'hex' | 'base64' | string
+): number[];
 ```
 
 </details>
@@ -13514,10 +13608,13 @@ Format datetime with *** time ago statement.
 <summary>Type Definition</summary>
 
 ```typescript
-function timeAgo(
-    date: Date | number,
-    now?: Date | number
-): string;
+namespace timeAgo {
+    interface ITimeAgo {
+        (date: Date | number, now?: Date | number): string;
+        i18n: string[][];
+    }
+}
+const timeAgo: timeAgo.ITimeAgo;
 ```
 
 </details>
@@ -13534,6 +13631,24 @@ timeAgo(now - 1000 * 6); // -> just now
 timeAgo(now - 1000 * 15); // -> 15 seconds ago
 timeAgo(now + 1000 * 60 * 15); // -> in 15 minutes
 timeAgo(now - 1000 * 60 * 60 * 5, now); // -> 5 hours ago
+// Replace i18n to support other languages.
+timeAgo.i18n = [
+    ['刚刚', '马上'],
+    ['%s 秒前', '%s 秒后'],
+    ['1 分钟前', '1 分钟后'],
+    ['%s 分钟前', '%s 分钟后'],
+    ['1 小时前', '1 小时后'],
+    ['%s 小时前', '%s 小时后'],
+    ['1 天前', '1 天后'],
+    ['%s 天前', '%s 天后'],
+    ['1 周前', '1 周后'],
+    ['%s 周前', '%s 周后'],
+    ['1 个月前', '1 个月后'],
+    ['%s 个月前', '%s 个月后'],
+    ['1 年前', '1 年后'],
+    ['%s 年前', '%s 年后']
+];
+timeAgo(now - 1000 * 15); // -> 15 秒前
 ```
 
 ## timeTaken 
@@ -13596,7 +13711,11 @@ Convert value to an array.
 <summary>Type Definition</summary>
 
 ```typescript
-function toArr(val: any): any[];
+function toArr(val: null | undefined): any[];
+function toArr(val: string): string[];
+function toArr<T>(val: T[]): T[];
+function toArr<T>(val: ArrayLike<T>): T[];
+function toArr<T>(val: T): T[];
 ```
 
 </details>
@@ -14491,11 +14610,11 @@ Wait until function returns a truthy value.
 <summary>Type Definition</summary>
 
 ```typescript
-function waitUntil(
-    condition: types.AnyFn,
+function waitUntil<T>(
+    condition: () => T | PromiseLike<T>,
     timeout?: number,
     interval?: number
-): Promise<any>;
+): Promise<T>;
 ```
 
 </details>
